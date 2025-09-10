@@ -233,5 +233,5 @@ export function getBaseUrl(): string {
   }
   
   // Production fallback
-  return 'https://invoice-mz-omega.vercel.app';
+  return 'https://final-google-supa-invoice.vercel.app/login';
 }
