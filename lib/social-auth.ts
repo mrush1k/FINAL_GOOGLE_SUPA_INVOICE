@@ -229,9 +229,9 @@ export function getBaseUrl(): string {
   
   // Development fallback
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
+    return 'https://final-google-supa-invoice.vercel.app';
   }
   
   // Production fallback
-  return 'https://final-google-supa-invoice.vercel.app/login';
+  return 'https://final-google-supa-invoice.vercel.app';
 }
