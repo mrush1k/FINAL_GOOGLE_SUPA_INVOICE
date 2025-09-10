@@ -1,0 +1,375 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 217 91% 60%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    
+    /* Custom theme variables */
+    --theme-primary: var(--primary);
+    --theme-primary-foreground: var(--primary-foreground);
+    --theme-secondary: var(--secondary);
+    --theme-accent: var(--accent);
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 217 91% 60%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    
+    /* Custom theme variables for dark mode */
+    --theme-primary: var(--primary);
+    --theme-primary-foreground: var(--primary-foreground);
+    --theme-secondary: var(--secondary);
+    --theme-accent: var(--accent);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes for theme colors */
+@layer utilities {
+  .text-theme-primary {
+    color: hsl(var(--theme-primary));
+  }
+  
+  .bg-theme-primary {
+    background-color: hsl(var(--theme-primary));
+  }
+  
+  .border-theme-primary {
+    border-color: hsl(var(--theme-primary));
+  }
+  
+  .ring-theme-primary {
+    --tw-ring-color: hsl(var(--theme-primary));
+  }
+  
+  .hover\:bg-theme-primary:hover {
+    background-color: hsl(var(--theme-primary));
+  }
+  
+  .focus\:ring-theme-primary:focus {
+    --tw-ring-color: hsl(var(--theme-primary));
+  }
+}
+
+/* Comprehensive Responsive Design Enhancements */
+@layer utilities {
+  /* Touch-friendly sizing for mobile - PRD Requirement */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Mobile-optimized spacing with progressive enhancement */
+  .mobile-padding {
+    @apply px-3 py-2;
+  }
+  
+  @screen xs {
+    .mobile-padding {
+      @apply px-4 py-3;
+    }
+  }
+  
+  @screen sm {
+    .mobile-padding {
+      @apply px-6 py-4;
+    }
+  }
+  
+  /* Mobile-first container widths with max-width constraints */
+  .container-mobile {
+    @apply w-full px-3;
+    max-width: 100vw;
+  }
+  
+  @screen xs {
+    .container-mobile {
+      @apply px-4;
+    }
+  }
+  
+  @screen sm {
+    .container-mobile {
+      @apply px-6 max-w-screen-sm mx-auto;
+    }
+  }
+  
+  @screen md {
+    .container-mobile {
+      @apply px-8 max-w-screen-md;
+    }
+  }
+  
+  @screen lg {
+    .container-mobile {
+      @apply max-w-screen-lg;
+    }
+  }
+  
+  @screen xl {
+    .container-mobile {
+      @apply max-w-screen-xl;
+    }
+  }
+  
+  /* Font scaling for mobile - PRD requirement for 14-16px on small screens */
+  .mobile-text {
+    @apply text-sm; /* 14px base */
+  }
+  
+  @screen xs {
+    .mobile-text {
+      @apply text-base; /* 16px */
+    }
+  }
+  
+  /* Mobile headings */
+  .mobile-h1 {
+    @apply text-xl font-bold; /* 20px on mobile */
+  }
+  
+  @screen xs {
+    .mobile-h1 {
+      @apply text-2xl; /* 24px */
+    }
+  }
+  
+  @screen sm {
+    .mobile-h1 {
+      @apply text-3xl; /* 30px */
+    }
+  }
+  
+  .mobile-h2 {
+    @apply text-lg font-semibold; /* 18px on mobile */
+  }
+  
+  @screen xs {
+    .mobile-h2 {
+      @apply text-xl; /* 20px */
+    }
+  }
+  
+  @screen sm {
+    .mobile-h2 {
+      @apply text-2xl; /* 24px */
+    }
+  }
+  
+  /* Viewport fixes - prevent horizontal scrolling */
+  .no-scroll-x {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  /* Mobile form inputs - full width and touch friendly */
+  .mobile-input {
+    @apply w-full h-12 px-4 text-base;
+  }
+  
+  @screen sm {
+    .mobile-input {
+      @apply h-10 text-sm;
+    }
+  }
+}
+
+/* Enhanced Mobile Navigation Components */
+@layer components {
+  .mobile-nav-item {
+    @apply flex items-center w-full px-4 py-3 text-base font-medium rounded-lg transition-colors touch-target;
+    min-height: 48px; /* Slightly larger than 44px for better UX */
+  }
+  
+  .mobile-nav-item.active {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .mobile-nav-item:not(.active) {
+    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900;
+  }
+  
+  /* Mobile-specific button styling */
+  .mobile-button {
+    @apply touch-target px-4 py-3 text-base font-medium rounded-lg transition-colors;
+    min-height: 48px;
+  }
+  
+  @screen sm {
+    .mobile-button {
+      @apply px-3 py-2 text-sm;
+      min-height: 40px;
+    }
+  }
+  
+  /* Mobile card improvements */
+  .mobile-card {
+    @apply p-4 rounded-lg border;
+  }
+  
+  @screen xs {
+    .mobile-card {
+      @apply p-5;
+    }
+  }
+  
+  @screen sm {
+    .mobile-card {
+      @apply p-6;
+    }
+  }
+}
+
+/* Enhanced Responsive Table Components */
+@layer components {
+  .responsive-table {
+    @apply w-full;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+  
+  .responsive-table table {
+    @apply min-w-full;
+  }
+  
+  /* Mobile table cards - stack vertically */
+  .mobile-table-card {
+    @apply block border rounded-lg p-4 mb-3 space-y-2;
+  }
+  
+  @screen sm {
+    .mobile-table-card {
+      @apply hidden;
+    }
+  }
+  
+  /* Desktop table - hidden on mobile */
+  .desktop-table {
+    @apply hidden;
+  }
+  
+  @screen sm {
+    .desktop-table {
+      @apply block;
+    }
+  }
+  
+  /* Enhanced stacked table for complex data */
+  .responsive-table-stack {
+    @apply block sm:table;
+  }
+  
+  .responsive-table-stack thead {
+    @apply hidden sm:table-header-group;
+  }
+  
+  .responsive-table-stack tbody {
+    @apply block sm:table-row-group;
+  }
+  
+  .responsive-table-stack tr {
+    @apply block mb-4 p-4 border rounded-lg sm:table-row sm:mb-0 sm:p-0 sm:border-0 sm:rounded-none;
+  }
+  
+  .responsive-table-stack td {
+    @apply block pb-2 text-left sm:table-cell sm:pb-0;
+  }
+  
+  .responsive-table-stack td:before {
+    content: attr(data-label);
+    @apply block font-semibold text-gray-700 mb-1 sm:hidden;
+  }
+  
+  /* Form improvements for mobile */
+  .mobile-form-group {
+    @apply space-y-2;
+  }
+  
+  @screen sm {
+    .mobile-form-group {
+      @apply space-y-1;
+    }
+  }
+  
+  .mobile-form-row {
+    @apply flex flex-col space-y-4;
+  }
+  
+  @screen sm {
+    .mobile-form-row {
+      @apply flex-row space-y-0 space-x-4;
+    }
+  }
+}

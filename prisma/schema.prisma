@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String               @id @default(uuid())
+  email                 String               @unique
+  username              String               @unique
+  country               String
+  currency              String
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  firstName             String?
+  lastName              String?
+  businessName          String?
+  phone                 String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  businessRegNumber     String?
+  dateFormat            String?              @default("DD/MM/YYYY")
+  taxLabel              String?              @default("GST") // Tax label (GST, VAT, etc.)
+  businessIdLabel       String?              @default("ABN") // Business ID label
+  locale                String?              @default("en-AU") // Locale for formatting
+  onboardingCompleted   Boolean?             @default(false)
+  colorScheme           String?              @default("light")
+  customWorkType        String?
+  displayName           String?
+  logoUrl               String?
+  postalCode            String?
+  primaryColor          String?              @default("#0066CC")
+  website               String?
+  workType              String?
+  aiLogoUrl             String?
+  aiLogoPrompt          String?
+  aiLogoGeneratedAt     DateTime?
+  defaultTaxRate        Decimal?             @db.Decimal(5, 2)
+  // New: Invoice template and appearance settings
+  invoiceTemplate       String?              @default("default") // 'default', 'modern', 'minimal'
+  invoiceColorScheme    String?              @default("blue")    // Color scheme for invoices
+  alwaysCcSelf          Boolean?             @default(false)     // Always CC self on invoice emails
+  defaultPaymentInstructions String?         // Default payment instructions
+  chatbotInteractions   ChatbotInteraction[]
+  customers             Customer[]
+  estimates             Estimate[]
+  invoices              Invoice[]
+  serviceTemplates      ServiceTemplate[]
+  socialAccounts        SocialAccount[]
+  userTutorials         UserTutorial[]
+  invoiceAudits         InvoiceAuditLog[]
+
+  @@map("users")
+}
+
+model Customer {
+  id                String     @id @default(uuid())
+  userId            String
+  displayName       String
+  firstName         String?
+  lastName          String?
+  businessName      String?
+  email             String?
+  phone             String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  country           String?
+  businessRegNumber String?   // ABN for Australia, similar for other countries
+  abn               String?   // Specific ABN field for Australian customers
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  notes             String?
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  estimates         Estimate[]
+  invoices          Invoice[]
+
+  @@map("customers")
+}
+
+model Invoice {
+  id                String        @id @default(uuid())
+  userId            String
+  customerId        String
+  number            String
+  status            InvoiceStatus @default(DRAFT)
+  issueDate         DateTime
+  dueDate           DateTime
+  currency          String
+  subtotal          Decimal       @db.Decimal(10, 2)
+  taxAmount         Decimal       @default(0) @db.Decimal(10, 2)
+  taxInclusive      Boolean       @default(false)
+  total             Decimal       @db.Decimal(10, 2)
+  poNumber          String?
+  notes             String?
+  terms             String?
+  paymentInstructions String?     // New: Editable payment instructions
+  ccEmails          String?       // New: Comma-separated CC emails
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  emailCount        Int           @default(0)
+  lastEmailSentAt   DateTime?
+  sentAt            DateTime?
+  sentTo            String?
+  emailDelivered    Boolean       @default(false)
+  emailOpened       Boolean       @default(false)
+  emailOpenedAt     DateTime?
+  emailClicked      Boolean       @default(false)
+  emailClickedAt    DateTime?
+  emailBounced      Boolean       @default(false)
+  emailBouncedAt    DateTime?
+  deliveryStatus    String?       // 'sent', 'delivered', 'bounced', 'failed'
+  trackingId        String?       // Unique ID for email tracking
+  voidedAt          DateTime?     // When invoice was voided
+  voidedBy          String?       // User ID who voided it
+  voidReason        String?       // Optional reason for voiding
+  deletedAt         DateTime?     // Soft delete timestamp
+  deletedBy         String?       // User ID who deleted it
+  deleteReason      String?       // Optional reason for deletion
+  items             InvoiceItem[]
+  customer          Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments          Payment[]
+  auditLogs         InvoiceAuditLog[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_items")
+}
+
+model Estimate {
+  id                   String         @id @default(uuid())
+  userId               String
+  customerId           String
+  number               String
+  status               EstimateStatus @default(DRAFT)
+  issueDate            DateTime
+  validUntil           DateTime
+  currency             String
+  subtotal             Decimal        @db.Decimal(10, 2)
+  taxAmount            Decimal        @default(0) @db.Decimal(10, 2)
+  taxInclusive         Boolean        @default(false)
+  total                Decimal        @db.Decimal(10, 2)
+  notes                String?
+  terms                String?
+  convertedToInvoiceId String?
+  convertedAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  items                EstimateItem[]
+  customer             Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("estimates")
+}
+
+model EstimateItem {
+  id          String   @id @default(uuid())
+  estimateId  String
+  itemName    String?
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  estimate    Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+
+  @@map("estimate_items")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  invoiceId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentDate   DateTime
+  paymentMethod PaymentMethod
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model ChatbotInteraction {
+  id          String   @id @default(uuid())
+  userId      String
+  userMessage String
+  botResponse String
+  action      String?
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chatbot_interactions")
+}
+
+model SocialAccount {
+  id           String         @id @default(uuid())
+  userId       String
+  provider     SocialProvider
+  providerId   String
+  email        String
+  name         String?
+  avatar       String?
+  accessToken  String?
+  refreshToken String?
+  tokenExpiry  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@unique([provider, providerId])
+  @@map("social_accounts")
+}
+
+model ServiceTemplate {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String
+  unitPrice   Decimal  @default(0) @db.Decimal(10, 2)
+  quantity    Decimal  @default(1) @db.Decimal(10, 2)
+  category    String?
+  keywords    String?
+  usageCount  Int      @default(0)
+  isPreferred Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("service_templates")
+}
+
+model UserTutorial {
+  id          String    @id @default(uuid())
+  userId      String
+  tutorialId  String
+  completed   Boolean   @default(false)
+  currentStep Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tutorialId])
+  @@map("user_tutorials")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  READ
+  APPROVED
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+  VOIDED
+}
+
+enum EstimateStatus {
+  DRAFT
+  SENT
+  APPROVED
+  DECLINED
+  EXPIRED
+  CONVERTED
+}
+
+enum PaymentMethod {
+  CASH
+  CHECK
+  BANK_TRANSFER
+  CREDIT_CARD
+  PAYPAL
+  STRIPE
+  OTHER
+}
+
+model InvoiceAuditLog {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  userId      String
+  action      String   // 'VOIDED', 'DELETED', 'RESTORED', etc.
+  reason      String?
+  oldStatus   String?
+  newStatus   String?
+  timestamp   DateTime @default(now())
+  
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_audit_logs")
+}
+
+enum SocialProvider {
+  GOOGLE
+  MICROSOFT
+  APPLE
+}
