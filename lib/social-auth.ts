@@ -233,5 +233,5 @@ export function getBaseUrl(): string {
   }
   
   // Production fallback
-  return 'https://final-google-supa-invoice.vercel.app';
+  return 'http://localhost:3000';
 }

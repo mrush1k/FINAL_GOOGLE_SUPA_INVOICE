@@ -101,7 +101,7 @@ export async function POST(
 
     // Generate unique tracking ID for this email
     const trackingId = randomUUID()
-    const baseUrl = 'https://invoice-mz-omega.vercel.app'
+    const baseUrl = 'https://final-google-supa-invoice.vercel.app'
     
     // Enhanced subject line with business name, invoice number, and amount
     const businessName = userProfile.businessName || userProfile.username || 'Your Business'

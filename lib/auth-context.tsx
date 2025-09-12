@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://invoice-mz-omega.vercel.app'
+      ? 'https://final-google-supa-invoice.vercel.app'
       : window.location.origin
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

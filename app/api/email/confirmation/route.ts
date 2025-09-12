@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get base URL for login link
-    const baseUrl = 'https://invoice-mz-omega.vercel.app'
+    const baseUrl = 'https://final-google-supa-invoice.vercel.app'
     
     // Create transporter
     const transporter = nodemailer.createTransport({
