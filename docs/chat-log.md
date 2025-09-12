@@ -36,9 +36,9 @@ Improvement:
 
 Add two distinct actions:
 
-Void Invoice: Marks the invoice as voided while keeping a record (for audit/logs).
+Delete Invoice: Marks the invoice as voided while keeping a record (for audit/logs).
 
-Delete Invoice: Permanently removes the invoice from the system (with a confirmation prompt).
+Permenatly Delete Invoice: Permanently removes the invoice from the system (with a confirmation prompt).
 
 Reflect status visually (e.g., a red "VOID" watermark on voided invoices).
 

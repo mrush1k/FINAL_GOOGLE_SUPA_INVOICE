@@ -716,7 +716,7 @@ export default function InvoiceDetailPage() {
                   className="touch-target"
                 >
                   <Ban className="w-4 h-4 mr-2" />
-                  <span className="hidden xs:inline">Void Invoice</span>
+                  <span className="hidden xs:inline">Delete.Invoice</span>
                   <span className="xs:hidden">Void</span>
                 </Button>
               )}
@@ -728,7 +728,7 @@ export default function InvoiceDetailPage() {
                   className="touch-target"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  <span className="hidden xs:inline">Delete Invoice</span>
+                  <span className="hidden xs:inline">  Permanently Delete Invoice</span>
                   <span className="xs:hidden">Delete</span>
                 </Button>
               )}
@@ -1162,7 +1162,7 @@ export default function InvoiceDetailPage() {
       <AlertDialog open={showVoidModal} onOpenChange={setShowVoidModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Void Invoice {invoice.number}?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Invoice {invoice.number}?</AlertDialogTitle>
             <AlertDialogDescription>
               This will mark the invoice as voided. The invoice will be kept for audit purposes but cannot be sent or edited.
               {invoice.payments && invoice.payments.length > 0 && 
@@ -1197,7 +1197,7 @@ export default function InvoiceDetailPage() {
               className="bg-red-600 hover:bg-red-700"
             >
               <Ban className="w-4 h-4 mr-2" />
-              Void Invoice
+              Delete Invoice
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
