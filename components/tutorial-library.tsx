@@ -87,6 +87,45 @@ export function TutorialLibrary({
   const [selectedCategory, setSelectedCategory] = useState(category || 'all')
   const [selectedDifficulty, setSelectedDifficulty] = useState('all')
   const [completedTutorials, setCompletedTutorials] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+
+  // Fetch tutorial completion status using Supabase cookie auth
+  useEffect(() => {
+    async function fetchTutorialProgress() {
+      try {
+        // Fetch progress for each tutorial in parallel
+        const responses = await Promise.all(
+          SAMPLE_TUTORIALS.map(tutorial => 
+            fetch(`/api/tutorials/progress?tutorialId=${tutorial.id}`)
+              .then(res => res.ok ? res.json() : null)
+              .catch(() => null)
+          )
+        )
+        
+        // Update completion status based on responses
+        const completedIds = new Set<string>()
+        responses.forEach((res, index) => {
+          if (res && res.completed) {
+            completedIds.add(SAMPLE_TUTORIALS[index].id)
+          }
+        })
+        
+        setCompletedTutorials(completedIds)
+        
+        // Update tutorial list with completion status
+        setTutorials(SAMPLE_TUTORIALS.map(tutorial => ({
+          ...tutorial,
+          completed: completedIds.has(tutorial.id)
+        })))
+      } catch (error) {
+        console.error('Error fetching tutorial progress:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchTutorialProgress()
+  }, [])
 
   useEffect(() => {
     let filtered = tutorials
@@ -117,11 +156,30 @@ export function TutorialLibrary({
     setFilteredTutorials(filtered)
   }, [tutorials, searchQuery, selectedCategory, selectedDifficulty, maxItems])
 
-  const handleTutorialComplete = (tutorialId: string) => {
-    setCompletedTutorials(prev => new Set(prev).add(tutorialId))
-    setTutorials(prev => prev.map(tutorial =>
-      tutorial.id === tutorialId ? { ...tutorial, completed: true } : tutorial
-    ))
+  const handleTutorialComplete = async (tutorialId: string) => {
+    try {
+      // Use Supabase cookie auth to save completion status
+      await fetch('/api/tutorials/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tutorialId,
+          currentStep: 100,
+          completed: true,
+          completedAt: new Date().toISOString()
+        })
+      })
+
+      // Update local state
+      setCompletedTutorials(prev => new Set(prev).add(tutorialId))
+      setTutorials(prev => prev.map(tutorial =>
+        tutorial.id === tutorialId ? { ...tutorial, completed: true } : tutorial
+      ))
+    } catch (error) {
+      console.error('Error marking tutorial as complete:', error)
+    }
   }
 
   const completionStats = {

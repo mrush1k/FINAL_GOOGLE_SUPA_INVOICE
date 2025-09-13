@@ -7,7 +7,7 @@ import { Progress } from './ui/progress'
 import { Badge } from './ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
 import { TutorialLibrary } from './tutorial-library'
-import { CheckCircle, Play, ArrowRight, Users, FileText, DollarSign, Settings, X } from 'lucide-react'
+import { CheckCircle, Play, ArrowRight, Users, FileText, DollarSign, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 interface OnboardingStep {
@@ -96,11 +96,10 @@ export function OnboardingFlow() {
   const handleSkipOnboarding = async () => {
     // Mark onboarding as completed
     try {
+      // Use Supabase cookie-based auth instead of JWT token
       await fetch('/api/users/onboarding-complete', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        method: 'POST'
+        // No Authorization header needed with Supabase cookie auth
       })
     } catch (error) {
       console.error('Failed to mark onboarding as complete:', error)
@@ -127,9 +126,6 @@ export function OnboardingFlow() {
                 Let's get you set up with everything you need to start invoicing like a pro.
               </DialogDescription>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleSkipOnboarding}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 

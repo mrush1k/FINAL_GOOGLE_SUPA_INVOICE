@@ -14,7 +14,7 @@ import {
   CheckCircle,
   Target
 } from 'lucide-react'
-import { Tutorial, TutorialStep, generateTutorialForUser, updateTutorialProgress } from '@/lib/ai-tutorial'
+import { Tutorial, TutorialStep, generateTutorialForUser } from '@/lib/ai-tutorial'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 
@@ -54,9 +54,19 @@ export function TutorialPopup({ open, onClose, onComplete, tutorial: propTutoria
       const nextStep = currentStep + 1
       setCurrentStep(nextStep)
       
-      // Update progress in database
+      // Update progress in database with Supabase cookie auth
       try {
-        await updateTutorialProgress(userProfile.id, tutorial.id, nextStep, false)
+        await fetch('/api/tutorials/progress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tutorialId: tutorial.id,
+            currentStep: nextStep,
+            completed: false
+          })
+        })
       } catch (error) {
         console.error('Failed to update tutorial progress:', error)
       }
@@ -73,9 +83,19 @@ export function TutorialPopup({ open, onClose, onComplete, tutorial: propTutoria
       const prevStep = currentStep - 1
       setCurrentStep(prevStep)
       
-      // Update progress in database
+      // Update progress in database with Supabase cookie auth
       try {
-        await updateTutorialProgress(userProfile.id, tutorial.id, prevStep, false)
+        await fetch('/api/tutorials/progress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tutorialId: tutorial.id,
+            currentStep: prevStep,
+            completed: false
+          })
+        })
       } catch (error) {
         console.error('Failed to update tutorial progress:', error)
       }
@@ -87,8 +107,19 @@ export function TutorialPopup({ open, onClose, onComplete, tutorial: propTutoria
 
     setLoading(true)
     try {
-      // Mark tutorial as completed
-      await updateTutorialProgress(userProfile.id, tutorial.id, tutorial.steps.length - 1, true)
+      // Mark tutorial as completed with Supabase cookie auth
+      await fetch('/api/tutorials/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tutorialId: tutorial.id,
+          currentStep: tutorial.steps.length - 1,
+          completed: true,
+          completedAt: new Date().toISOString()
+        })
+      })
       onComplete?.()
       onClose()
     } catch (error) {
@@ -125,8 +156,19 @@ export function TutorialPopup({ open, onClose, onComplete, tutorial: propTutoria
 
     setLoading(true)
     try {
-      // Mark tutorial as completed but skipped
-      await updateTutorialProgress(userProfile.id, tutorial.id, currentStep, true)
+      // Mark tutorial as completed but skipped with Supabase cookie auth
+      await fetch('/api/tutorials/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tutorialId: tutorial.id,
+          currentStep: currentStep,
+          completed: true,
+          completedAt: new Date().toISOString()
+        })
+      })
       onClose()
     } catch (error) {
       console.error('Failed to skip tutorial:', error)

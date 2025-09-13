@@ -490,14 +490,19 @@ export function generateTutorialForUser(user: User): Tutorial | null {
 }
 
 // Save user tutorial progress
-export async function saveUserTutorial(userTutorial: Omit<UserTutorial, 'id' | 'createdAt'>): Promise<UserTutorial> {
+export async function saveUserTutorial(tutorialId: string, currentStep: number, completed: boolean): Promise<UserTutorial> {
   const response = await fetch('/api/tutorials/progress', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
+      'Content-Type': 'application/json'
+      // No Authorization header needed with Supabase cookie auth
     },
-    body: JSON.stringify(userTutorial)
+    body: JSON.stringify({
+      tutorialId,
+      currentStep,
+      completed,
+      completedAt: completed ? new Date().toISOString() : undefined
+    })
   })
   
   if (!response.ok) {
@@ -508,13 +513,9 @@ export async function saveUserTutorial(userTutorial: Omit<UserTutorial, 'id' | '
 }
 
 // Get user tutorial progress
-export async function getUserTutorial(userId: string, tutorialId: string): Promise<UserTutorial | null> {
+export async function getUserTutorial(tutorialId: string): Promise<UserTutorial | null> {
   try {
-    const response = await fetch(`/api/tutorials/progress?userId=${userId}&tutorialId=${tutorialId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    const response = await fetch(`/api/tutorials/progress?tutorialId=${tutorialId}`)
     
     if (!response.ok) {
       if (response.status === 404) return null
@@ -530,19 +531,17 @@ export async function getUserTutorial(userId: string, tutorialId: string): Promi
 
 // Update tutorial progress
 export async function updateTutorialProgress(
-  userId: string, 
   tutorialId: string, 
   currentStep: number, 
   completed: boolean = false
 ): Promise<UserTutorial> {
   const response = await fetch('/api/tutorials/progress', {
-    method: 'PUT',
+    method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
+      'Content-Type': 'application/json'
+      // No Authorization header needed with Supabase cookie auth
     },
     body: JSON.stringify({
-      userId,
       tutorialId,
       currentStep,
       completed,

@@ -3,7 +3,17 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { TutorialPopup } from '@/components/tutorial-popup'
-import { generateTutorialForUser, getUserTutorial } from '@/lib/ai-tutorial'
+import { generateTutorialForUser } from '@/lib/ai-tutorial'
+
+interface TutorialProgress {
+  id: string
+  userId: string
+  tutorialId: string
+  completed: boolean
+  currentStep: number
+  completedAt?: Date
+  createdAt: Date
+}
 
 interface TutorialContextType {
   showTutorial: (delay?: number) => void
@@ -27,7 +37,13 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
         const tutorial = generateTutorialForUser(userProfile)
         if (!tutorial) return
 
-        const progress = await getUserTutorial(userProfile.id, tutorial.id)
+        // Get tutorial progress using Supabase cookie auth
+        const response = await fetch(`/api/tutorials/progress?tutorialId=${tutorial.id}`)
+        let progress: TutorialProgress | null = null
+        if (response.ok) {
+          progress = await response.json()
+        }
+        
         const shouldShowTutorial = !progress || !progress.completed
         
         setIsNewUser(!progress)

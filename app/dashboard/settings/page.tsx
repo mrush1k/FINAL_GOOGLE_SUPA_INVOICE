@@ -556,7 +556,7 @@ export default function SettingsPage() {
     try {
       const tutorial = generateTutorialForUser(user)
       if (tutorial) {
-        const progress = await getUserTutorial(user.id, tutorial.id)
+        const progress = await getUserTutorial(tutorial.id)
         setTutorialCompleted(progress?.completed || false)
       }
     } catch (error) {

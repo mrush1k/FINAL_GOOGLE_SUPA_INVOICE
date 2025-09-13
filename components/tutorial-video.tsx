@@ -27,13 +27,33 @@ interface TutorialVideoProps {
 export function TutorialVideo({ video, onComplete, compact = false }: TutorialVideoProps) {
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     setIsPlaying(true)
+    
     // In a real implementation, you would track video completion
-    // For now, we'll mark as complete when play is clicked
-    setTimeout(() => {
-      onComplete?.(video.id)
-    }, 2000) // Simulate video completion after 2 seconds
+    // Update tutorial progress with Supabase cookie auth
+    try {
+      setTimeout(async () => {
+        // Mark tutorial as completed with Supabase cookie auth
+        await fetch('/api/tutorials/progress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tutorialId: video.id,
+            currentStep: 100,
+            completed: true,
+            completedAt: new Date().toISOString()
+          })
+        })
+        
+        // Notify parent component about completion
+        onComplete?.(video.id)
+      }, 2000) // Simulate video completion after 2 seconds
+    } catch (error) {
+      console.error('Failed to mark tutorial as complete:', error)
+    }
   }
 
   const categoryColors = {
