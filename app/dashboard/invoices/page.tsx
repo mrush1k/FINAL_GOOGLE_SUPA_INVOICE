@@ -9,7 +9,17 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Plus, Eye, Edit, Download, Mail, Mic, Wifi, WifiOff } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Download, Mail, Mic, Wifi, WifiOff, Trash2 } from 'lucide-react'
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Invoice, InvoiceStatus } from '@/lib/types'
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket-client'
 
@@ -36,6 +46,12 @@ export default function InvoicesPage() {
   const [errorCount, setErrorCount] = useState(0)
   const [wsConnected, setWsConnected] = useState(false)
   const [useWebSocket, setUseWebSocket] = useState(true)
+  
+  // State for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null)
+  const [deleteConfirmWithPayments, setDeleteConfirmWithPayments] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -271,6 +287,72 @@ export default function InvoicesPage() {
       }
     } catch (error) {
       console.error('Error downloading PDF:', error)
+    }
+  }
+  
+  // Show delete confirmation dialog
+  const confirmDelete = (invoiceId: string) => {
+    const invoice = invoices.find(inv => inv.id === invoiceId)
+    
+    // Check if invoice can be deleted based on status
+    const canDeleteStatuses = ['DRAFT', 'VOIDED']
+    if (invoice && !canDeleteStatuses.includes(invoice.status)) {
+      let errorMessage = 'Cannot delete this invoice'
+      
+      if (['SENT', 'APPROVED', 'OVERDUE'].includes(invoice.status)) {
+        errorMessage = 'Cannot delete sent invoices. You can void the invoice instead.'
+      } else if (['PAID', 'PARTIALLY_PAID'].includes(invoice.status)) {
+        errorMessage = 'Cannot delete paid invoices. Consider voiding first or creating a credit note.'
+      }
+      
+      setDeleteError(errorMessage)
+      setDeleteDialogOpen(true)
+      return
+    }
+    
+    // Set invoice to delete and open dialog
+    setInvoiceToDelete(invoiceId)
+    setDeleteError(null)
+    setDeleteConfirmWithPayments(false)
+    setDeleteDialogOpen(true)
+  }
+  
+  // Handle actual invoice deletion
+  const handleDeleteInvoice = async () => {
+    if (!invoiceToDelete) return
+    
+    try {
+      const headers = await getAuthHeaders()
+      const response = await fetch(`/api/invoices/${invoiceToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          confirmWithPayments: deleteConfirmWithPayments
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        // Remove the invoice from the list
+        setInvoices(prevInvoices => prevInvoices.filter(inv => inv.id !== invoiceToDelete))
+        setTrackingActivity('Invoice deleted successfully')
+        setTimeout(() => setTrackingActivity(''), 3000)
+        setDeleteDialogOpen(false)
+      } else if (response.status === 400 && data.requiresConfirmation) {
+        // Need confirmation for invoice with payments
+        setDeleteError(data.error)
+        setDeleteConfirmWithPayments(true)
+      } else {
+        // Other error
+        setDeleteError(data.error || 'Failed to delete invoice')
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error)
+      setDeleteError('An unexpected error occurred')
     }
   }
 
@@ -553,6 +635,18 @@ export default function InvoicesPage() {
                               <Mail className="w-4 h-4" />
                             </Button>
                           )}
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              confirmDelete(invoice.id);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </Link>
@@ -643,6 +737,18 @@ export default function InvoicesPage() {
                                     <Mail className="w-4 h-4" />
                                   </Button>
                                 )}
+                                
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="touch-target text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmDelete(invoice.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -656,6 +762,53 @@ export default function InvoicesPage() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteError && !deleteConfirmWithPayments ? "Cannot Delete Invoice" : "Permanently Delete Invoice"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteError ? (
+                <div className="text-red-500">
+                  {deleteError}
+                </div>
+              ) : (
+                <>
+                  This action cannot be undone. This will permanently delete the invoice
+                  and remove it from our servers.
+                  
+                  {deleteConfirmWithPayments && (
+                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                      <p className="font-medium text-amber-700">Warning: This invoice has payment records</p>
+                      <p className="text-amber-600 text-sm mt-1">
+                        Deleting will hide the invoice but preserve payment history for audit purposes.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            {(deleteError && !deleteConfirmWithPayments) ? (
+              <AlertDialogAction onClick={() => setDeleteDialogOpen(false)}>
+                OK
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction 
+                onClick={handleDeleteInvoice}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              >
+                {deleteConfirmWithPayments ? "Confirm Delete" : "Delete"}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
