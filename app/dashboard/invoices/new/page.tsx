@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -122,6 +122,8 @@ export default function NewInvoicePage() {
   const [clientSignature, setClientSignature] = useState('')
   const [showSignatureModal, setShowSignatureModal] = useState(false)
   const [signatureType, setSignatureType] = useState<'my' | 'client'>('my')
+  const [mySignatureFile, setMySignatureFile] = useState<string | null>(null)
+  const [clientSignatureFile, setClientSignatureFile] = useState<string | null>(null)
   
   // Additional fields
   const [poNumber, setPoNumber] = useState('')
@@ -407,6 +409,8 @@ export default function NewInvoicePage() {
         taxInclusive,
         total,
         status,
+        mySignature: mySignature || mySignatureFile || null,
+        clientSignature: clientSignature || clientSignatureFile || null,
         items: validItems.map(item => ({
           name: item.name || '',
           description: item.description!,
@@ -462,6 +466,42 @@ export default function NewInvoicePage() {
       setDueDate(newDueDate)
     }
   }
+  
+  // Handle signature file uploads
+  const handleSignatureUpload = (type: 'my' | 'client', file: File) => {
+    if (!file) return
+    
+    // Check if the file is an image
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (PNG, JPEG)",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    // Create a URL for the image file
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const result = e.target?.result as string
+      if (type === 'my') {
+        setMySignatureFile(result)
+      } else {
+        setClientSignatureFile(result)
+      }
+      
+      toast({
+        title: "Signature uploaded",
+        description: `${type === 'my' ? 'Your' : 'Client'} signature has been uploaded.`,
+      })
+    }
+    reader.readAsDataURL(file)
+  }
+  
+  // References for file inputs
+  const mySignatureInputRef = useRef<HTMLInputElement>(null)
+  const clientSignatureInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className="container-mobile space-y-4 sm:space-y-6">
@@ -1017,17 +1057,37 @@ export default function NewInvoicePage() {
                       <PenTool className="w-4 h-4 mr-2" />
                       Draw
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => mySignatureInputRef.current?.click()}
+                    >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload
                     </Button>
                     <Button variant="outline" size="sm">
                       Use Saved
                     </Button>
+                    <input 
+                      type="file" 
+                      ref={mySignatureInputRef} 
+                      onChange={(e) => e.target.files && handleSignatureUpload('my', e.target.files[0])} 
+                      accept="image/*" 
+                      className="hidden" 
+                    />
                   </div>
                   {mySignature && (
                     <div className="mt-2 p-3 border rounded-lg bg-gray-50">
                       <p className="text-sm text-gray-600">Signature added ✓</p>
+                    </div>
+                  )}
+                  {mySignatureFile && (
+                    <div className="mt-2 p-3 border rounded-lg bg-gray-50">
+                      <img 
+                        src={mySignatureFile} 
+                        alt="My signature" 
+                        className="max-h-20 object-contain mx-auto"
+                      />
                     </div>
                   )}
                 </div>
@@ -1044,14 +1104,34 @@ export default function NewInvoicePage() {
                       <PenTool className="w-4 h-4 mr-2" />
                       Draw
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => clientSignatureInputRef.current?.click()}
+                    >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload
                     </Button>
+                    <input 
+                      type="file" 
+                      ref={clientSignatureInputRef} 
+                      onChange={(e) => e.target.files && handleSignatureUpload('client', e.target.files[0])} 
+                      accept="image/*" 
+                      className="hidden" 
+                    />
                   </div>
                   {clientSignature && (
                     <div className="mt-2 p-3 border rounded-lg bg-gray-50">
                       <p className="text-sm text-gray-600">Client signature added ✓</p>
+                    </div>
+                  )}
+                  {clientSignatureFile && (
+                    <div className="mt-2 p-3 border rounded-lg bg-gray-50">
+                      <img 
+                        src={clientSignatureFile} 
+                        alt="Client signature" 
+                        className="max-h-20 object-contain mx-auto"
+                      />
                     </div>
                   )}
                   <p className="text-xs text-gray-500 mt-2">

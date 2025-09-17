@@ -596,8 +596,9 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="container-mobile space-y-4 sm:space-y-6 max-w-4xl">
-      {/* Mobile Header */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+      {/* Header */}
+      <div className="flex flex-col space-y-4">
+        {/* Back button and Invoice Info */}
         <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
           <Link href="/dashboard">
             <Button variant="outline" size="sm" className="touch-target w-fit">
@@ -605,11 +606,11 @@ export default function InvoiceDetailPage() {
               <span className="hidden xs:inline">Back</span>
             </Button>
           </Link>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+          <div>
             <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
               Invoice {invoice.number}
             </h1>
-            <div className="flex items-center space-x-3 mt-2 sm:mt-0">
+            <div className="flex items-center space-x-3 mt-2">
               {getStatusBadge(invoice.status)}
               <span className="text-xs sm:text-sm text-gray-500">
                 {format(new Date(invoice.createdAt), 'MMM dd, yyyy')}
@@ -618,25 +619,27 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
         
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:gap-2">
           {isEditing ? (
             <>
               <Button
                 onClick={saveEditChanges}
                 disabled={loading}
-                className="touch-target order-1"
+                className="touch-target col-span-1"
               >
                 <Save className="w-4 h-4 mr-2" />
-                <span className="hidden xs:inline">Save Changes</span>
-                <span className="xs:hidden">Save</span>
+                <span className="hidden sm:inline">Save Changes</span>
+                <span className="sm:hidden">Save</span>
               </Button>
               <Button
                 variant="outline"
                 onClick={cancelEdit}
-                className="touch-target order-2"
+                className="touch-target col-span-1"
               >
                 <X className="w-4 h-4 mr-2" />
-                Cancel
+                <span className="hidden sm:inline">Cancel</span>
+                <span className="sm:hidden">Cancel</span>
               </Button>
             </>
           ) : (
@@ -646,19 +649,19 @@ export default function InvoiceDetailPage() {
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(true)}
-                    className="touch-target"
+                    className="touch-target col-span-1"
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    <span className="hidden xs:inline">Edit</span>
-                    <span className="xs:hidden">Edit</span>
+                    <span className="hidden sm:inline">Edit</span>
+                    <span className="sm:hidden">Edit</span>
                   </Button>
                   <Button
                     onClick={() => updateInvoiceStatus(InvoiceStatus.SENT)}
-                    className="touch-target"
+                    className="touch-target col-span-1"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    <span className="hidden xs:inline">Send Invoice</span>
-                    <span className="xs:hidden">Send</span>
+                    <span className="hidden sm:inline">Send Invoice</span>
+                    <span className="sm:hidden">Send</span>
                   </Button>
                 </>
               )}
@@ -667,22 +670,22 @@ export default function InvoiceDetailPage() {
                 <>
                   <Button
                     onClick={() => setShowPaymentModal(true)}
-                    className="touch-target"
+                    className="touch-target col-span-1"
                   >
                     <DollarSign className="w-4 h-4 mr-2" />
-                    <span className="hidden xs:inline">Record Payment</span>
-                    <span className="xs:hidden">Payment</span>
+                    <span className="hidden sm:inline">Record Payment</span>
+                    <span className="sm:hidden">Payment</span>
                   </Button>
                   {getAmountDue() > 0 && (
                     <Button
                       onClick={markAsPaid}
                       disabled={markingPaid}
                       variant="outline"
-                      className="touch-target"
+                      className="touch-target col-span-1"
                     >
                       <DollarSign className="w-4 h-4 mr-2" />
-                      <span className="hidden xs:inline">{markingPaid ? 'Marking...' : 'Mark as Paid'}</span>
-                      <span className="xs:hidden">{markingPaid ? '...' : 'Paid'}</span>
+                      <span className="hidden sm:inline">{markingPaid ? 'Marking...' : 'Mark as Paid'}</span>
+                      <span className="sm:hidden">{markingPaid ? '...' : 'Paid'}</span>
                     </Button>
                   )}
                 </>
@@ -692,32 +695,32 @@ export default function InvoiceDetailPage() {
                 variant="outline"
                 onClick={() => setShowEmailModal(true)}
                 disabled={!invoice.customer?.email}
-                className="touch-target"
+                className="touch-target col-span-1"
               >
                 <Mail className="w-4 h-4 mr-2" />
-                <span className="hidden xs:inline">Email Invoice</span>
-                <span className="xs:hidden">Email</span>
+                <span className="hidden sm:inline">Email Invoice</span>
+                <span className="sm:hidden">Email</span>
               </Button>
               
               <Button 
                 variant="outline" 
                 onClick={downloadInvoicePDF}
-                className="touch-target"
+                className="touch-target col-span-1"
               >
                 <Download className="w-4 h-4 mr-2" />
-                <span className="hidden xs:inline">Download PDF</span>
-                <span className="xs:hidden">PDF</span>
+                <span className="hidden sm:inline">Download PDF</span>
+                <span className="sm:hidden">PDF</span>
               </Button>
               
               {canVoidInvoice(invoice) && (
                 <Button
                   variant="outline"
                   onClick={() => setShowVoidModal(true)}
-                  className="touch-target"
+                  className="touch-target col-span-1"
                 >
                   <Ban className="w-4 h-4 mr-2" />
-                  <span className="hidden xs:inline">Delete.Invoice</span>
-                  <span className="xs:hidden">Void</span>
+                  <span className="hidden sm:inline">Void Invoice</span>
+                  <span className="sm:hidden">Void</span>
                 </Button>
               )}
               
@@ -725,11 +728,11 @@ export default function InvoiceDetailPage() {
                 <Button
                   variant="outline"
                   onClick={() => setShowDeleteModal(true)}
-                  className="touch-target"
+                  className="touch-target col-span-1"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  <span className="hidden xs:inline">  Permanently Delete Invoice</span>
-                  <span className="xs:hidden">Delete</span>
+                  <span className="hidden sm:inline">Delete Invoice</span>
+                  <span className="sm:hidden">Delete</span>
                 </Button>
               )}
             </>
@@ -1162,7 +1165,7 @@ export default function InvoiceDetailPage() {
       <AlertDialog open={showVoidModal} onOpenChange={setShowVoidModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Invoice {invoice.number}?</AlertDialogTitle>
+            <AlertDialogTitle>Void Invoice {invoice.number}?</AlertDialogTitle>
             <AlertDialogDescription>
               This will mark the invoice as voided. The invoice will be kept for audit purposes but cannot be sent or edited.
               {invoice.payments && invoice.payments.length > 0 && 
@@ -1197,7 +1200,7 @@ export default function InvoiceDetailPage() {
               className="bg-red-600 hover:bg-red-700"
             >
               <Ban className="w-4 h-4 mr-2" />
-              Delete Invoice
+              Void Invoice
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
