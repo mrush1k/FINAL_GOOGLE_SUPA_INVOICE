@@ -41,7 +41,20 @@ export default function DashboardPage() {
       const response = await fetch('/api/invoices', { headers })
       if (response.ok) {
         const data = await response.json()
-        setInvoices(data)
+        
+        // Validate invoice data structure and filter out invalid ones
+        const validInvoices = data.filter((invoice: any) => {
+          if (!invoice.status) {
+            console.warn('Invoice missing status:', invoice.id)
+            return false
+          }
+          return true
+        })
+        
+        console.log('Fetched invoices:', validInvoices.length, 'valid out of', data.length, 'total')
+        setInvoices(validInvoices)
+      } else {
+        console.error('Failed to fetch invoices:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching invoices:', error)
@@ -51,13 +64,19 @@ export default function DashboardPage() {
   }
 
   const overdueInvoices = invoices.filter(invoice => {
+    // Skip invoices with invalid status
+    if (!invoice.status) {
+      console.warn('Invoice with missing status:', invoice.id)
+      return false
+    }
+    
     const isOverdue = isPast(parseISO(invoice.dueDate.toString())) && 
                      ![InvoiceStatus.PAID, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.CANCELLED].includes(invoice.status)
     return isOverdue || invoice.status === InvoiceStatus.OVERDUE
   }).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
 
   const paidInvoices = invoices.filter(invoice => 
-    [InvoiceStatus.PAID, InvoiceStatus.PARTIALLY_PAID].includes(invoice.status)
+    invoice.status && [InvoiceStatus.PAID, InvoiceStatus.PARTIALLY_PAID].includes(invoice.status)
   ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
   const totalOutstanding = overdueInvoices.reduce((sum, invoice) => sum + invoice.total, 0)
@@ -76,6 +95,13 @@ export default function DashboardPage() {
     }
     
     const config = statusConfig[status]
+    
+    // Add fallback for undefined or unknown status
+    if (!config) {
+      console.warn('Unknown invoice status:', status, 'Type:', typeof status)
+      return <Badge variant="secondary" className="text-xs">Unknown</Badge>
+    }
+    
     return <Badge variant={config.variant} className="text-xs">{config.label}</Badge>
   }
 

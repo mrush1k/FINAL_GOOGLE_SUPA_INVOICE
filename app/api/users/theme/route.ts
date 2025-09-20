@@ -1,45 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import { createClient } from '@supabase/supabase-js'
+import { prisma } from '@/lib/prisma'
+import { createClient } from '@/utils/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const prisma = new PrismaClient()
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('Authorization')
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
+async function getUserFromSupabase() {
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
   
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-    if (error || !user) {
-      return null
-    }
-
-    const dbUser = await prisma.user.findUnique({
-      where: { email: user.email! }
-    })
-
-    return dbUser
-  } catch (error) {
-    console.error('Error getting user from token:', error)
+  if (error || !user) {
     return null
   }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id }
+  })
+
+  return dbUser
 }
 
 // GET /api/users/theme - Retrieve user theme preferences
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromToken(request)
+    const user = await getUserFromSupabase()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -63,7 +47,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/users/theme - Update user theme preferences
 export async function PUT(request: NextRequest) {
   try {
-    const user = await getUserFromToken(request)
+    const user = await getUserFromSupabase()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

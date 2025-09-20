@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import { createClient } from '@supabase/supabase-js'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { createClient } from '@/utils/supabase/server'
 
 export async function POST(
   request: NextRequest,
@@ -11,21 +9,12 @@ export async function POST(
   try {
     const { id } = await params
     
-    // Get user from Supabase auth
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    // Get user from Supabase auth using server client
+    const supabase = await createClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
 
     if (error || !user) {
+      console.error('Supabase auth error:', error)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
