@@ -1,33 +1,68 @@
-WebSocket setup
+Local WebSocket testing
+=======================
 
-This project has a small client WebSocket helper at `lib/websocket-client.ts` used by the invoices dashboard to receive live updates.
+This project includes a lightweight WebSocket client used for real-time invoice updates. Next.js API routes do not support raw WebSockets, so for local testing you can run a small standalone WebSocket server.
 
-Recommended production setup
+1) Install dependencies (one-time):
 
-1. Run a dedicated WebSocket server (recommended):
-   - Use a lightweight server (Node `ws`) or a managed service (Pusher, Ably, Supabase Realtime).
-   - Accept connections at a stable URL (wss://your-ws.example.com).
+```powershell
+npm install ws --no-save
+```
 
-2. Configure the client with an environment variable:
-   - Set NEXT_PUBLIC_WS_URL to your WebSocket base URL (e.g. `wss://your-ws.example.com`).
-   - In Vercel/Netlify, add `NEXT_PUBLIC_WS_URL` to environment variables.
+2) Create a small test server (example):
 
-3. Behavior in this repo:
-   - If `NEXT_PUBLIC_WS_URL` is set the client will use that URL.
-   - If not set and running on `localhost`, the client will fall back to `window.location.origin` for local testing.
-   - If not set in production, the client will return `null` from `getWebSocketClient()` and the app will fallback to polling (no noisy connection attempts).
+Create `scripts/ws-server.js` with this content:
 
-Local testing
+```js
+const WebSocket = require('ws')
 
-- To test locally without a WS server:
-  - Start the app normally (`npm run dev`). The invoices page will use enhanced polling instead of a WS server.
+const port = process.env.PORT || 8081
+const wss = new WebSocket.Server({ port })
 
-- To test with a local WS server:
-  - Start a local WS server that listens on the same origin + `/api/websocket` or set `NEXT_PUBLIC_WS_URL` to point to your local server (e.g., `ws://localhost:8080`).
+wss.on('connection', function connection(ws, req) {
+  console.log('Client connected')
 
-Notes
+  ws.on('message', function incoming(message) {
+    console.log('received: %s', message)
+  })
 
-- Next.js API routes are not suitable for raw WebSocket servers. For production use a separate WS server or a managed realtime provider.
-- The client now uses exponential backoff with jitter and rate-limited logging to avoid noisy reconnection logs.
+  // Send a periodic test message
+  const iv = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'invoice_update', data: { invoiceId: 'test', timestamp: new Date().toISOString() } }))
+    }
+  }, 5000)
 
-If you want, I can add a simple example `ws` server script in `scripts/` for local testing.
+  ws.on('close', () => clearInterval(iv))
+})
+
+console.log(`WebSocket test server running on ws://localhost:${port}`)
+```
+
+3) Run the test server:
+
+```powershell
+node scripts/ws-server.js
+```
+
+4) Configure the app to use the test server
+
+Set the environment variable `NEXT_PUBLIC_WS_URL` to your test server URL. In development you can set this in a `.env.local` file:
+
+```
+NEXT_PUBLIC_WS_URL=http://localhost:8081
+```
+
+Note: The client converts http:// to ws:// and https:// to wss:// automatically.
+
+5) Start the app and open the invoices page
+
+```powershell
+npm run dev
+```
+
+Open `/dashboard/invoices` and watch the browser console — you should see incoming `invoice_update` messages every 5 seconds from the test server.
+
+If you don't want to run a test WS server, the client will gracefully fall back to polling and log a single warning when it does so.
+
+That's it — short, standalone, and easy to test locally.
