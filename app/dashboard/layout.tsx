@@ -1,27 +1,28 @@
 "use client"
 
 import { ProtectedRoute } from '@/components/protected-route'
-import { Button } from '@/components/ui/button'
-import { 
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import dynamic from 'next/dynamic'
+
+// Lazy-load heavier UI components to reduce initial client bundle size
+const Button = dynamic(() => import('@/components/ui/button').then(m => m.Button), { ssr: false })
+const Sheet = dynamic(() => import('@/components/ui/sheet').then(m => m.Sheet), { ssr: false })
+const SheetContent = dynamic(() => import('@/components/ui/sheet').then(m => m.SheetContent), { ssr: false })
+const SheetHeader = dynamic(() => import('@/components/ui/sheet').then(m => m.SheetHeader), { ssr: false })
+const SheetTitle = dynamic(() => import('@/components/ui/sheet').then(m => m.SheetTitle), { ssr: false })
+const SheetTrigger = dynamic(() => import('@/components/ui/sheet').then(m => m.SheetTrigger), { ssr: false })
 import { useAuth } from '@/lib/auth-context'
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
   Calculator,
-  Plus, 
-  Settings, 
+  Plus,
+  Settings,
   LogOut,
   Mic,
   Menu,
   Activity,
-  BarChart3
+  BarChart3,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -67,6 +68,7 @@ export default function DashboardLayout({
           <Link 
             key={item.name} 
             href={item.href}
+            prefetch
             onClick={() => mobile && setIsOpen(false)}
           >
             <div className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -88,7 +90,7 @@ export default function DashboardLayout({
   const ActionButtons = ({ mobile = false }: { mobile?: boolean }) => (
     <>
       <div className={`mt-2.5 ${mobile ? 'mt-4' : ''}`}>
-        <Link href="/dashboard/invoices/new" onClick={() => mobile && setIsOpen(false)}>
+        <Link href="/dashboard/invoices/new" prefetch onClick={() => mobile && setIsOpen(false)}>
           <Button className="w-full text-sm py-2 h-9">
             <Plus className="w-4 h-4 mr-2" />
             New Invoice
@@ -96,7 +98,7 @@ export default function DashboardLayout({
         </Link>
       </div>
       <div className="mt-2.5">
-        <Link href="/dashboard/invoices/voice" onClick={() => mobile && setIsOpen(false)}>
+        <Link href="/dashboard/invoices/voice" prefetch onClick={() => mobile && setIsOpen(false)}>
           <Button variant="outline" className="w-full text-sm py-2 h-9">
             <Mic className="w-4 h-4 mr-2" />
             Voice Invoice

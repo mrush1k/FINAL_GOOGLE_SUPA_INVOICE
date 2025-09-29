@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
@@ -46,6 +46,7 @@ export default function InvoicesPage() {
   const [errorCount, setErrorCount] = useState(0)
   const [wsConnected, setWsConnected] = useState(false)
   const [useWebSocket, setUseWebSocket] = useState(true)
+  const lastWsErrorAt = useRef<number | null>(null)
   
   // State for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -81,7 +82,12 @@ export default function InvoicesPage() {
         setTimeout(() => setTrackingActivity(''), 3000)
       }
     } catch (error) {
-      console.error('WebSocket connection failed:', error)
+      // Rate-limit noisy WebSocket error logs to once every 30s
+      const now = Date.now()
+      if (!lastWsErrorAt.current || now - lastWsErrorAt.current > 30000) {
+        console.warn('WebSocket connection failed (will fallback to polling):', error)
+        lastWsErrorAt.current = now
+      }
       setWsConnected(false)
       setUseWebSocket(false)
       setTrackingActivity('Using enhanced polling for real-time updates')
@@ -136,7 +142,13 @@ export default function InvoicesPage() {
     return () => {
       const wsClient = getWebSocketClient()
       if (wsClient) {
-        wsClient.unsubscribe('invoice-list')
+        try {
+          wsClient.unsubscribe('invoice-list')
+          // Ensure the client fully disconnects to stop reconnection attempts
+          wsClient.disconnect()
+        } catch (e) {
+          // swallow errors during unmount
+        }
       }
     }
   }, [])

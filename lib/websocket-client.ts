@@ -19,7 +19,12 @@ export class InvoiceWebSocketClient {
   private messageHandlers: Map<string, (message: WebSocketMessage) => void> = new Map()
 
   constructor(url: string) {
-    this.url = url.replace('http://', 'ws://').replace('https://', 'wss://')
+    // Prefer explicit env config for production; fallback to provided url for dev
+    const envUrl = typeof window !== 'undefined' && (window as any).__NEXT_DATA__?.env?.NEXT_PUBLIC_WS_URL
+      || (typeof process !== 'undefined' ? (process.env as any).NEXT_PUBLIC_WS_URL : undefined)
+
+    const base = envUrl || url
+    this.url = base.replace('http://', 'ws://').replace('https://', 'wss://')
   }
 
   connect(userId: string): Promise<void> {
@@ -42,14 +47,21 @@ export class InvoiceWebSocketClient {
           }
         }
 
-        this.ws.onclose = () => {
-          console.log('WebSocket disconnected')
+        this.ws.onclose = (event) => {
+          // Provide more context about close
+          console.warn('WebSocket disconnected', { code: (event as CloseEvent).code, reason: (event as CloseEvent).reason })
           this.reconnect(userId)
         }
 
-        this.ws.onerror = (error) => {
-          console.error('WebSocket error:', error)
-          reject(error)
+        this.ws.onerror = (event) => {
+          // Log as a warning (network blips are common). Avoid rejecting here so callers
+          // don't immediately disable WebSocket usage; allow onclose to trigger reconnect flow.
+          try {
+            console.warn('WebSocket error event:', event)
+          } catch (e) {
+            console.warn('WebSocket error (unknown event)')
+          }
+          // do not call reject here
         }
       } catch (error) {
         reject(error)
@@ -70,17 +82,21 @@ export class InvoiceWebSocketClient {
 
   private reconnect(userId: string) {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max WebSocket reconnection attempts reached')
+      console.info('Max WebSocket reconnection attempts reached — will stop trying and fall back to polling')
       return
     }
 
     this.reconnectAttempts++
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
+    // Exponential backoff with jitter, cap at 30s
+    const base = this.reconnectDelay
+    const exp = Math.pow(2, this.reconnectAttempts - 1)
+    const jitter = Math.floor(Math.random() * 1000)
+    const delay = Math.min(30000, base * exp) + jitter
 
     setTimeout(() => {
-      console.log(`Attempting WebSocket reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}`)
+      console.warn(`Attempting WebSocket reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts} (delay ${delay}ms)`)
       this.connect(userId).catch(() => {
-        console.error(`WebSocket reconnection attempt ${this.reconnectAttempts} failed`)
+        console.warn(`WebSocket reconnection attempt ${this.reconnectAttempts} failed`)
       })
     }, delay)
   }
@@ -119,10 +135,18 @@ let wsClient: InvoiceWebSocketClient | null = null
 
 export function getWebSocketClient(): InvoiceWebSocketClient | null {
   if (typeof window === 'undefined') return null
-  
+  // In production, avoid making blind ws connections if NEXT_PUBLIC_WS_URL is not set
+  const envUrl = (window as any).__NEXT_DATA__?.env?.NEXT_PUBLIC_WS_URL || (process.env as any).NEXT_PUBLIC_WS_URL
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+  if (!envUrl && !isDev) {
+    // No websocket configured for production; return null so callers fall back to polling
+    return null
+  }
+
   if (!wsClient) {
     wsClient = new InvoiceWebSocketClient(window.location.origin)
   }
-  
+
   return wsClient
 }

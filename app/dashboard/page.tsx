@@ -1,28 +1,38 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { useAuth } from '@/lib/auth-context'
-import { Invoice, InvoiceStatus } from '@/lib/types'
-import { 
-  Plus, 
-  AlertCircle, 
-  CheckCircle, 
-  FileText, 
-  Users, 
-  DollarSign,
-  Calendar,
-  Mic,
-  Mail,
-  Download
-} from 'lucide-react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
+
+// Lazy-load UI and icon components to reduce initial JS bundle
+const Button = dynamic(() => import('@/components/ui/button').then(m => m.Button), { ssr: false })
+const Card = dynamic(() => import('@/components/ui/card').then(m => m.Card), { ssr: false })
+const CardContent = dynamic(() => import('@/components/ui/card').then(m => m.CardContent), { ssr: false })
+const CardHeader = dynamic(() => import('@/components/ui/card').then(m => m.CardHeader), { ssr: false })
+const CardTitle = dynamic(() => import('@/components/ui/card').then(m => m.CardTitle), { ssr: false })
+const Table = dynamic(() => import('@/components/ui/table').then(m => m.Table), { ssr: false })
+const TableBody = dynamic(() => import('@/components/ui/table').then(m => m.TableBody), { ssr: false })
+const TableCell = dynamic(() => import('@/components/ui/table').then(m => m.TableCell), { ssr: false })
+const TableHead = dynamic(() => import('@/components/ui/table').then(m => m.TableHead), { ssr: false })
+const TableHeader = dynamic(() => import('@/components/ui/table').then(m => m.TableHeader), { ssr: false })
+const TableRow = dynamic(() => import('@/components/ui/table').then(m => m.TableRow), { ssr: false })
+const Badge = dynamic(() => import('@/components/ui/badge').then(m => m.Badge), { ssr: false })
+
+const Plus = dynamic(() => import('lucide-react').then(m => m.Plus), { ssr: false })
+const AlertCircle = dynamic(() => import('lucide-react').then(m => m.AlertCircle), { ssr: false })
+const CheckCircle = dynamic(() => import('lucide-react').then(m => m.CheckCircle), { ssr: false })
+const FileText = dynamic(() => import('lucide-react').then(m => m.FileText), { ssr: false })
+const Users = dynamic(() => import('lucide-react').then(m => m.Users), { ssr: false })
+const DollarSign = dynamic(() => import('lucide-react').then(m => m.DollarSign), { ssr: false })
+const Calendar = dynamic(() => import('lucide-react').then(m => m.Calendar), { ssr: false })
+const Mic = dynamic(() => import('lucide-react').then(m => m.Mic), { ssr: false })
+const Mail = dynamic(() => import('lucide-react').then(m => m.Mail), { ssr: false })
+const Download = dynamic(() => import('lucide-react').then(m => m.Download), { ssr: false })
 import { format, isPast, parseISO } from 'date-fns'
 import { formatCurrency as formatCurrencyUtil } from '@/lib/utils'
 import { OnboardingFlow } from '@/components/onboarding-flow'
+import { useAuth } from '@/lib/auth-context'
+import { Invoice, InvoiceStatus } from '@/lib/types'
 
 export default function DashboardPage() {
   const { user, userProfile, getAuthHeaders } = useAuth()
@@ -137,14 +147,14 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-2">
-          <Link href="/dashboard/invoices/voice" className="w-full sm:w-auto">
+          <Link href="/dashboard/invoices/voice" prefetch className="w-full sm:w-auto">
             <Button variant="outline" className="w-full sm:w-auto touch-target">
               <Mic className="w-4 h-4 mr-2" />
               <span className="hidden xs:inline">Voice Invoice</span>
               <span className="xs:hidden">Voice</span>
             </Button>
           </Link>
-          <Link href="/dashboard/invoices/new" className="w-full sm:w-auto">
+          <Link href="/dashboard/invoices/new" prefetch className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto touch-target">
               <Plus className="w-4 h-4 mr-2" />
               <span className="hidden xs:inline">New Invoice</span>

@@ -3,10 +3,26 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Users, DollarSign, Clock, CheckCircle, BarChart3, Check, Star } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
+
+// Lazy-load UI components/icons to reduce initial JS bundle
+const Button = dynamic(() => import('@/components/ui/button').then(m => m.Button), { ssr: false })
+const Card = dynamic(() => import('@/components/ui/card').then(m => m.Card), { ssr: false })
+const CardContent = dynamic(() => import('@/components/ui/card').then(m => m.CardContent), { ssr: false })
+const CardDescription = dynamic(() => import('@/components/ui/card').then(m => m.CardDescription), { ssr: false })
+const CardHeader = dynamic(() => import('@/components/ui/card').then(m => m.CardHeader), { ssr: false })
+const CardTitle = dynamic(() => import('@/components/ui/card').then(m => m.CardTitle), { ssr: false })
+
+// Icons - dynamic import to avoid shipping lucide-react on first paint
+const FileText = dynamic(() => import('lucide-react').then(m => m.FileText), { ssr: false })
+const Users = dynamic(() => import('lucide-react').then(m => m.Users), { ssr: false })
+const DollarSign = dynamic(() => import('lucide-react').then(m => m.DollarSign), { ssr: false })
+const Clock = dynamic(() => import('lucide-react').then(m => m.Clock), { ssr: false })
+const CheckCircle = dynamic(() => import('lucide-react').then(m => m.CheckCircle), { ssr: false })
+const BarChart3 = dynamic(() => import('lucide-react').then(m => m.BarChart3), { ssr: false })
+const Check = dynamic(() => import('lucide-react').then(m => m.Check), { ssr: false })
+const Star = dynamic(() => import('lucide-react').then(m => m.Star), { ssr: false })
 
 export default function Home() {
   const { user, loading } = useAuth()
@@ -41,10 +57,10 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-gray-900">Invoice Easy</h1>
             </div>
             <div className="flex space-x-4">
-              <Link href="/login">
+              <Link href="/login" prefetch>
                 <Button variant="outline">Sign In</Button>
               </Link>
-              <Link href="/signup">
+              <Link href="/signup" prefetch>
                 <Button>Get Started</Button>
               </Link>
             </div>
@@ -63,12 +79,12 @@ export default function Home() {
             and solo business owners. Create, send, and track invoices with ease.
           </p>
           <div className="flex justify-center space-x-4">
-            <Link href="/signup">
+            <Link href="/signup" prefetch>
               <Button size="lg" className="px-8 py-3">
                 Start Free Trial
               </Button>
             </Link>
-            <Link href="/login">
+            <Link href="/login" prefetch>
               <Button variant="outline" size="lg" className="px-8 py-3">
                 Sign In
               </Button>

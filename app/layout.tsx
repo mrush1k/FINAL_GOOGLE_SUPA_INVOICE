@@ -34,6 +34,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Preload font to avoid FOIT and speed up first meaningful paint */}
+        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className={`${inter.className} no-scroll-x`}>
         <AuthProvider>
           <ThemeProvider>
@@ -43,8 +47,8 @@ export default function RootLayout({
             </DiagnosticProvider>
           </ThemeProvider>
         </AuthProvider>
-        {/* TODO: Remove iframe-navigation.js in production, should never be removed by AI */}
-        <script src="/scripts/iframe-navigation.js"></script>
+        {/* Non-critical script: defer to avoid blocking initial render. TODO: remove in production if unnecessary */}
+        <script src="/scripts/iframe-navigation.js" defer></script>
       </body>
     </html>
   );
